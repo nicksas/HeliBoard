@@ -62,6 +62,7 @@ import helium314.keyboard.latin.utils.ScriptUtils;
 import helium314.keyboard.latin.utils.StatsUtils;
 import helium314.keyboard.latin.utils.TextRange;
 import helium314.keyboard.latin.utils.TimestampKt;
+import helium314.keyboard.latin.vietnamese.TelexProcessor;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -966,6 +967,28 @@ public final class InputLogic {
     private void handleNonSeparatorEvent(final Event event, final SettingsValues settingsValues,
             final InputTransaction inputTransaction) {
         final int codePoint = event.getCodePoint();
+
+        // VIETNAMESE TELEX INPUT
+        final String language = settingsValues.mLocale.getLanguage();
+        if (settingsValues.mTelexEnabled && "vi".equals(language) && !InputTypeUtils.isPasswordInputType(settingsValues.mInputAttributes.mInputType)) {
+            final String currentWord = mWordComposer.getTypedWord();
+            final String telexResult = TelexProcessor.process(currentWord, (char) codePoint);
+            if (telexResult != null) {
+                if (!telexResult.equals(currentWord)) {
+                    final int[] codePoints = StringUtils.toCodePointArray(telexResult);
+                    mWordComposer.setComposingWord(codePoints, mLatinIME.getCoordinatesForCurrentKeyboard(codePoints));
+                    if (mWordComposer.isComposingWord()) {
+                        setComposingTextInternal(getTextWithUnderline(mWordComposer.getTypedWord()), 1);
+                    }
+                }
+                // telexResult is not null, so the key has been handled by the telex processor
+                // we must not process it again in the default way
+                inputTransaction.setRequiresUpdateSuggestions();
+                return; // we have handled the input
+            }
+        }
+        // END VIETNAMESE TELEX INPUT
+
         // TODO: refactor this method to stop flipping isComposingWord around all the time, and
         // make it shorter (possibly cut into several pieces). Also factor
         // handleNonSpecialCharacterEvent which has the same name as other handle* methods but is

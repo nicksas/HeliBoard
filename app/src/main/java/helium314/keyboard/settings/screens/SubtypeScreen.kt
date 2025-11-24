@@ -227,8 +227,29 @@ fun SubtypeScreen(
                                     setCurrentSubtype(currentSubtype.with(ExtraValue.LOCALIZED_NUMBER_ROW, it.toString()))
                                 }
                             )
-                            DefaultButton(checked == null) {
+                            DefaultButton(isDefault = checked == null) {
                                 setCurrentSubtype(currentSubtype.without(ExtraValue.LOCALIZED_NUMBER_ROW))
+                            }
+                        }
+                    }
+                }
+                if (currentSubtype.locale.language == "vi") {
+                    HorizontalDivider()
+                    WithSmallTitle(description = "Telex") {
+                        ActionRow {
+                            Text(
+                                text = "Enable Telex",
+                                modifier = Modifier.weight(1f).padding(start = 10.dp)
+                            )
+                            val telexEnabled = currentSubtype.getExtraValueOf("enable_telex")?.toBoolean() ?: true
+                            Switch(
+                                checked = telexEnabled,
+                                onCheckedChange = {
+                                    setCurrentSubtype(currentSubtype.with("enable_telex", it.toString()))
+                                }
+                            )
+                            DefaultButton(isDefault = currentSubtype.getExtraValueOf("enable_telex") == null) {
+                                setCurrentSubtype(currentSubtype.without("enable_telex"))
                             }
                         }
                     }
